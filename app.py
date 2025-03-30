@@ -151,6 +151,17 @@ async def upload_file(file: UploadFile = File(...), prompt: str = ...):
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+@app.post("additional-prompt")
+async def retrieve_prompt(request: PromptRequest):
+    try:
+        prompt_generated = prompting(request.subject, request.words)
+        logger.info(f"Generated prompt: {prompt_generated}")
+
+        return {"status": "error", "message" : str(e)}
+    except Exception as e:
+        logger.error(f"Error generating prompt: {str(e)}")
+        return {"status": "error","message": str(e)}
+
 
 @app.post("/process")
 async def process_file():
@@ -175,7 +186,7 @@ async def process_file():
         base64_image = await encode_image(image_path)
 
         # Prepare prompt
-        full_prompt = f"""
+        full_prompt = prompting() + f"""
         You must return all the LaTeX code for the given image provided. Output all of the code.
 
         #Important Rules:
