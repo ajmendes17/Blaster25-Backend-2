@@ -27,6 +27,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+def prompting(subject, words):
+
+    # Check if the list of words is not empty
+    if words:
+        # Use an f-string to format the prompt
+        return f"Solve this {subject} problem related to these topics: {', '.join(words)}"
+    else:
+        # If the list of words is empty, return a different prompt
+        return f"Solve this {subject} problem"
+ 
+        
+
 # Configuration
 UPLOAD_FOLDER = 'uploads'
 app.config = {
@@ -94,8 +106,8 @@ async def upload_file(file: UploadFile = File(...), prompt: str = ...):
         # image_path = "uploads/TEST.png"
         base64_image = await encode_image(file_path)
 
-        # Prepare prompt
-        full_prompt = f"""
+        # Prepare prompt, add inputs for prompting
+        full_prompt = prompting() + f""" 
         You must return all the LaTeX code for the given image provided. Output all of the code.
 
         #Important Rules:

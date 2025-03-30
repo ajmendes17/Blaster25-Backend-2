@@ -3,4 +3,5 @@ fastapi
 pytesseract
 openai
 dotenv
-python-multipart
+python-multipar
+uvicorn
