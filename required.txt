@@ -1,0 +1,6 @@
+werkzeug
+fastapi
+pytesseract
+openai
+dotenv
+python-multipart
