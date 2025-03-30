@@ -1,0 +1,84 @@
+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
+
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+from werkzeug.utils import secure_filename
+import os
+
+app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
+
+UPLOAD_FOLDER = 'uploads'
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = MAX_CONTENT_LENGTH
+
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/uploads', methods=['POST'])
+def upload_file():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'status': 'error', 'message': 'No file uploaded'}), 400
+
+        if 'prompt' not in request.form:
+            return jsonify({'status': 'error', 'message': 'No prompt provided'}), 400
+
+        file = request.files['file']
+        prompt = request.form['prompt']
+
+        if file.filename == '':
+            return jsonify({'status': 'error', 'message': 'No file selected'}), 400
+
+        if file and allowed_file(file.filename):
+            _, file_extension = os.path.splitext(file.filename)
+            file_extension = file_extension[1:]
+            new_filename = f"test_file.{file_extension}"
+            new_file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+
+            if os.path.exists(new_file_path):
+                os.remove(new_file_path)
+
+            file.save(new_file_path)
+
+            # Save the prompt to a text file
+            prompt_filename = "prompt.txt"
+            prompt_file_path = os.path.join(app.config['UPLOAD_FOLDER'], prompt_filename)
+            
+            try:
+                with open(prompt_file_path, 'w') as f:
+                    f.write(prompt)
+            except Exception as e:
+                return jsonify({
+                    'status': 'error',
+                    'message': f'Failed to save prompt: {str(e)}'
+                }), 500
+
+            return jsonify({
+                'status': 'success',
+                'message': f'File {new_filename} and prompt saved successfully',
+                'file': new_filename,
+                'prompt_file': prompt_filename
+            }), 200
+
+        else:
+            return jsonify({'status': 'error', 'message': 'File type not allowed'}), 400
+
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': f'An error occurred while processing the file: {str(e)}'
+        }), 500
+
+
+if __name__ == '__main__':
+    app.run(host='127.0.0.1', port=3001, debug=True)
